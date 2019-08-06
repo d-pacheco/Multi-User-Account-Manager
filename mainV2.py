@@ -35,7 +35,7 @@ class LoginPage(tk.Frame):
         self.passwordL = ttk.Label(self, text= "Password")
         self.userL.grid(row=0, column=0, sticky="E")
         self.passwordL.grid(row=1, column=0, sticky="E")
-
+        
         self.userE = ttk.Entry(self, width=35)
         self.passwordE = ttk.Entry(self, width=35, show="*")
         self.userE.grid(row=0, column=1)
@@ -55,10 +55,6 @@ class LoginPage(tk.Frame):
             f = open(filename, "r")
             sevedPass = f.readline()
             if self.password == sevedPass:
-                # Temp Labels until proper functionallity implemented
-                self.errorL.destroy()
-                self.successL = ttk.Label(self, text = "Login Successful")
-                self.successL.grid(row=3, columnspan=2)
                 controller.loginSuccess()
             else:
                 self.errorL.grid(row=3, column=0, columnspan=2)
@@ -129,5 +125,5 @@ class HomePage(tk.Frame):
         
 
 app = AccountManager()
-print("Hello")
+
 app.mainloop()
