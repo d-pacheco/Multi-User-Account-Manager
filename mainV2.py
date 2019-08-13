@@ -37,6 +37,12 @@ class AccountManager(tk.Tk):
             frame.grid(row=0, column=0, sticky="nsew")
         self.show_frame(HomePage)
 
+    def userLogout(self):
+        # self: The AccountManager class
+        # Deletes the pages that were made when a user has successfully logged in
+        self.show_frame(LoginPage)
+        for page in (HomePage, PasswordViewPage, CreatePasswordPage):
+            del self.frames[page]
 
 class LoginPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -45,13 +51,13 @@ class LoginPage(tk.Frame):
         # controller: The AccountManager class
 
         tk.Frame.__init__(self, parent)
-        self.userL = ttk.Label(self, text= "Username")
-        self.passwordL = ttk.Label(self, text= "Password")
+        self.userL = tk.Label(self, text= "Username")
+        self.passwordL = tk.Label(self, text= "Password")
         self.userL.grid(row=0, column=0, sticky="E")
         self.passwordL.grid(row=1, column=0, sticky="E")
         
-        self.userE = ttk.Entry(self, width=35)
-        self.passwordE = ttk.Entry(self, width=35, show="*")
+        self.userE = tk.Entry(self, width=35)
+        self.passwordE = tk.Entry(self, width=35, show="*")
         self.userE.grid(row=0, column=1)
         self.passwordE.grid(row=1, column=1)
 
@@ -63,7 +69,7 @@ class LoginPage(tk.Frame):
     def login(self, controller):
         # self: The LoginPage class
         # controller: The AccountManager class
-        self.errorL = ttk.Label(self, text= "Username or Password incorrect")
+        self.errorL = tk.Label(self, text= "Username or Password incorrect")
         self.username = self.userE.get()
         self.password = self.passwordE.get()
         filename = self.username + '.txt'
@@ -88,18 +94,18 @@ class CreateUserPage(tk.Frame):
         # controller: The AccountManager class
 
         tk.Frame.__init__(self, parent)
-        self.instructionL = ttk.Label(self, text="Username and password must be 8 characters minimum")
-        self.userL = ttk.Label(self, text= "Username")
-        self.passwordL = ttk.Label(self, text= "Password")
-        self.passwordL2 = ttk.Label(self, text= "Password")
+        self.instructionL = tk.Label(self, text="Username and password must be 8 characters minimum")
+        self.userL = tk.Label(self, text= "Username")
+        self.passwordL = tk.Label(self, text= "Password")
+        self.passwordL2 = tk.Label(self, text= "Password")
         self.instructionL.grid(row=0, columnspan=2)
         self.userL.grid(row=1, column=0, sticky="E")
         self.passwordL.grid(row=2, column=0, sticky="E")
         self.passwordL2.grid(row=3, column=0, sticky="E")
 
-        self.userE = ttk.Entry(self, width=35)
-        self.passwordE1 = ttk.Entry(self, width=35, show="*")
-        self.passwordE2 = ttk.Entry(self, width=35, show="*")
+        self.userE = tk.Entry(self, width=35)
+        self.passwordE1 = tk.Entry(self, width=35, show="*")
+        self.passwordE2 = tk.Entry(self, width=35, show="*")
         self.userE.grid(row=1, column=1)
         self.passwordE1.grid(row=2, column=1)
         self.passwordE2.grid(row=3, column=1)
@@ -155,7 +161,7 @@ class HomePage(tk.Frame):
         self.filename = filename
         self.viewPassesB = ttk.Button(self, text = "View Passwords", command = lambda: controller.show_frame(PasswordViewPage))
         self.createPassB = ttk.Button(self, text = "Create New Password", command = lambda: controller.show_frame(CreatePasswordPage))
-        self.logoutB = ttk.Button(self, text = "Logout", command = lambda: controller.show_frame(LoginPage))
+        self.logoutB = ttk.Button(self, text = "Logout", command = controller.userLogout)
         self.viewPassesB.grid(row = 0, column = 0)
         self.createPassB.grid(row = 0, column = 1)
         self.logoutB.grid(row = 0, column = 2)
@@ -169,8 +175,28 @@ class PasswordViewPage(tk.Frame):
         # filename: Name of file for current logged in User
 
         tk.Frame.__init__(self, parent)
+        self.filename = filename
+        self.spacing = "                          "
         self.homeB = ttk.Button(self, text = "Home", command = lambda: controller.show_frame(HomePage))
         self.homeB.grid(row=0, column=0)
+        
+        tk.Label(self, text = "Website:").grid(row=1, column=0, sticky='e')
+        tk.Label(self, text = "Username:").grid(row=2, column=0, sticky='e')
+        tk.Label(self, text = "Password:").grid(row=3, column=0, sticky='e')
+
+        self.websiteE = tk.Entry(self, width=35)
+        self.usernameE = tk.Entry(self, width=35)
+        self.passwordE = tk.Entry(self, width=35)
+        self.websiteE.grid(row=1, column=1)
+        self.usernameE.grid(row=2, column=1)
+        self.passwordE.grid(row=3, column=1)
+
+        self.passwordLB = tk.Listbox(self, height = 6, width = 50)
+        self.passwordLB.grid(row=4, column=0, columnspan=2)
+
+
+
+
 
 class CreatePasswordPage(tk.Frame):
     def __init__(self, parent, controller, filename):
@@ -185,16 +211,16 @@ class CreatePasswordPage(tk.Frame):
         self.homeB.grid(row=0, column=0)
 
         self.rowEntryStart = 1
-        self.websiteL = ttk.Label(self, text = "Website")
-        self.usernameL = ttk.Label(self, text = "Username")
-        self.passwordL = ttk.Label(self, text = "Password")
+        self.websiteL = tk.Label(self, text = "Website")
+        self.usernameL = tk.Label(self, text = "Username")
+        self.passwordL = tk.Label(self, text = "Password")
         self.websiteL.grid(row=self.rowEntryStart, column=0)
         self.usernameL.grid(row=self.rowEntryStart+1, column=0)
         self.passwordL.grid(row=self.rowEntryStart+2 , column=0)
 
-        self.websiteE = ttk.Entry(self, width=35)
-        self.usernameE = ttk.Entry(self, width=35)
-        self.passwordE = ttk.Entry(self, width=35)
+        self.websiteE = tk.Entry(self, width=35)
+        self.usernameE = tk.Entry(self, width=35)
+        self.passwordE = tk.Entry(self, width=35)
         self.websiteE.grid(row=self.rowEntryStart, column=1)
         self.usernameE.grid(row=self.rowEntryStart+1, column=1)
         self.passwordE.grid(row=self.rowEntryStart+2, column=1)
@@ -227,7 +253,7 @@ class CreatePasswordPage(tk.Frame):
         username = self.usernameE.get()
         password = self.passwordE.get()
         if len(website) < 1 or len(username) < 1 or len(password) < 1:
-            self.errorL = ttk.Label(self, text = "Text fields cannot be blank")
+            self.errorL = tk.Label(self, text = "Text fields cannot be blank")
             self.errorL.grid(row=self.rowEntryStart+5, columnspan=2)
         else:
             with open(self.filename, "a") as f:
@@ -250,8 +276,24 @@ class CreatePasswordPage(tk.Frame):
         controller.show_frame(HomePage)
     
 
+def encrypt(string):
+    encryptPass = ""
+    for letter in string:
+        if letter == ' ':
+            encryptPass += ' '
+        else:
+            encryptPass += chr(ord(letter) + 7)
+    return encryptPass
 
-        
+def decrypt(string):
+    decryptPass = ""
+    for letter in string:
+        if letter == ' ':
+            decryptPass += ' '
+        else:
+            decryptPass += chr(ord(letter) - 7)
+    return decryptPass
+
 
 app = AccountManager()
 
