@@ -72,7 +72,7 @@ class LoginPage(tk.Frame):
         self.errorL = tk.Label(self, text= "Username or Password incorrect")
         self.username = self.userE.get()
         self.password = self.passwordE.get()
-        filename = self.username + '.txt'
+        filename = userToFilename(self.username)
         try:
             f = open(filename, "r")
             savedPass = f.readline()
@@ -80,7 +80,7 @@ class LoginPage(tk.Frame):
             if self.password == savedPass[0]:
                 self.userE.delete(0, 'end')
                 self.passwordE.delete(0, 'end')
-                controller.loginSuccess(self.username + '.txt')
+                controller.loginSuccess(filename)
             else:
                 self.errorL.grid(row=4, column=0, columnspan=2)
         except:
@@ -125,7 +125,7 @@ class CreateUserPage(tk.Frame):
             self.errorL = tk.Label(self, text = "Username or password isn't long enough")
             self.errorL.grid(row=5, columnspan=2)
         elif password == rePassword:
-            filename = username + '.txt'
+            filename = userToFilename(username)
             # Check to see if the username already exists
             try: 
                 f = open(filename, "r")
@@ -159,14 +159,15 @@ class HomePage(tk.Frame):
 
         tk.Frame.__init__(self, parent)
         self.filename = filename
+        
         self.viewPassesB = ttk.Button(self, text = "View Passwords", command = lambda: controller.show_frame(PasswordViewPage))
         self.createPassB = ttk.Button(self, text = "Create New Password", command = lambda: controller.show_frame(CreatePasswordPage))
-        self.logoutB = ttk.Button(self, text = "Logout", command = controller.userLogout)
         self.viewPassesB.grid(row = 0, column = 0)
         self.createPassB.grid(row = 0, column = 1)
+        self.logoutB = ttk.Button(self, text = "Logout", command = controller.userLogout)
         self.logoutB.grid(row = 0, column = 2)
-  
-        
+
+
 class PasswordViewPage(tk.Frame):
     def __init__(self, parent, controller, filename):
         # self: The PasswordViewPage class
@@ -177,6 +178,8 @@ class PasswordViewPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.filename = filename
         self.spacing = "                          "
+        self.accountData = {}
+
         self.homeB = ttk.Button(self, text = "Home", command = lambda: controller.show_frame(HomePage))
         self.homeB.grid(row=0, column=0)
         
@@ -191,12 +194,51 @@ class PasswordViewPage(tk.Frame):
         self.usernameE.grid(row=2, column=1)
         self.passwordE.grid(row=3, column=1)
 
-        self.passwordLB = tk.Listbox(self, height = 6, width = 50)
+        self.passwordLB = tk.Listbox(self, height = 6, width = 90, font = ('Courier', 9))
         self.passwordLB.grid(row=4, column=0, columnspan=2)
+        self.passwordLB.insert('end', "website" + self.spacing + "Username"+ self.spacing + "Password" + self.spacing + "!")
+        print(len(self.spacing)+len("Website"))
 
+        self.loadAccountData()
+        self.displayData()
 
+    def loadAccountData(self):
+        # self: The PasswordViewPage class
+        # Opens users file and reads the account data it contains and stores the data
+        # in the self.accountData dictionary
+        with open(self.filename, "r") as f:
+            raw_data = f.readlines()
+            raw_data = [line.strip() for line in raw_data]
+            raw_data = [line.split('~.|') for line in raw_data]
+        f.close()
+        
+        self.userPass = raw_data[0][0]
+        print(raw_data)
+        for i in range(len(raw_data)-1):
+            self.accountData[raw_data[i+1][0]] = raw_data[i+1][1]
+        return
+    
+    def displayData(self):
+        # self: The PasswordViewPage class
+        # Display the account data stored in the self.accountData dictionary
+        for key in self.accountData:
+            WebsiteUser = key.split("|.~")
+            website = WebsiteUser[0]
+            username = WebsiteUser[1]
 
+            webSpaceLen = (len("Website") + len(self.spacing)) - len(website)
+            webSpace = ""
+            for i in range(webSpaceLen):
+                webSpace += " "
+            print(website + ' ' + str(len(webSpace)) + ' ' + str(len(website)))
 
+            userSpaceLen = (len("Username") + len(self.spacing) - len(username))
+            userSpace = ""
+            for i in range(userSpaceLen):
+                userSpace += " "
+
+            self.passwordLB.insert('end', website + webSpace + username + userSpace + self.accountData[key])
+        return
 
 class CreatePasswordPage(tk.Frame):
     def __init__(self, parent, controller, filename):
@@ -257,7 +299,7 @@ class CreatePasswordPage(tk.Frame):
             self.errorL.grid(row=self.rowEntryStart+5, columnspan=2)
         else:
             with open(self.filename, "a") as f:
-                f.write(website + '~.|' + username + '~.|' + password + '\n')
+                f.write(website + '|.~' + username + '~.|' + password + '\n')
                 f.close()
             self.clearEntries()
 
@@ -294,6 +336,14 @@ def decrypt(string):
             decryptPass += chr(ord(letter) - 7)
     return decryptPass
 
+def userToFilename(username):
+    # username: A string that is the users username
+    # Takes in the username and turns each letter into its ASCII value and concates to make filename
+    filename = ""
+    for i in username:
+        filename += str(ord(i))
+    filename += ".txt"
+    return filename
 
 app = AccountManager()
 
