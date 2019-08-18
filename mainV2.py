@@ -76,8 +76,8 @@ class LoginPage(tk.Frame):
         try:
             f = open(filename, "r")
             savedPass = f.readline()
-            savedPass = savedPass.split('~.|')
-            if self.password == savedPass[0]:
+            savedPass = savedPass.strip()
+            if self.password == savedPass:
                 self.userE.delete(0, 'end')
                 self.passwordE.delete(0, 'end')
                 controller.loginSuccess(filename)
@@ -134,7 +134,7 @@ class CreateUserPage(tk.Frame):
                 f.close()
             except:
                 f = open(filename, "w")
-                f.write(password + '~.|' + '\n')
+                f.write(password + '\n')
                 f.close()
                 self.clearEntries() # Clear entry field once leaving create user page
                 controller.show_frame(LoginPage)
@@ -181,8 +181,8 @@ class PasswordViewPage(tk.Frame):
         self.accountData = {}
 
         self.homeB = ttk.Button(self, text = "Home", command = lambda: controller.show_frame(HomePage))
-        self.homeB.grid(row=0, column=0)
-        
+        self.homeB.grid(row=0, column=0, sticky = 'w')
+        '''
         tk.Label(self, text = "Website:").grid(row=1, column=0, sticky='e')
         tk.Label(self, text = "Username:").grid(row=2, column=0, sticky='e')
         tk.Label(self, text = "Password:").grid(row=3, column=0, sticky='e')
@@ -190,17 +190,20 @@ class PasswordViewPage(tk.Frame):
         self.websiteE = tk.Entry(self, width=35)
         self.usernameE = tk.Entry(self, width=35)
         self.passwordE = tk.Entry(self, width=35)
-        self.websiteE.grid(row=1, column=1)
-        self.usernameE.grid(row=2, column=1)
-        self.passwordE.grid(row=3, column=1)
+        #self.websiteE.grid(row=2, column=1, sticky = 'w')
+        self.usernameE.grid(row=1, column=1, sticky = 'w')
+        self.passwordE.grid(row=2, column=1, sticky = 'w')
+        '''
+        self.searchB = ttk.Button(self, text = "Search", command = self.search)
+        self.searchE = tk.Entry(self, width=35)
+        self.searchB.grid(row=3, column=1, sticky='w')
+        self.searchE.grid(row=3, column=0, sticky='e')
 
         self.passwordLB = tk.Listbox(self, height = 6, width = 90, font = ('Courier', 9))
         self.passwordLB.grid(row=4, column=0, columnspan=2)
-        self.passwordLB.insert('end', "website" + self.spacing + "Username"+ self.spacing + "Password" + self.spacing + "!")
-        print(len(self.spacing)+len("Website"))
+        self.passwordLB.insert('end', "website" + self.spacing + "Username"+ self.spacing + "Password")
 
-        self.loadAccountData()
-        self.displayData()
+        self.displayAllData()
 
     def loadAccountData(self):
         # self: The PasswordViewPage class
@@ -213,32 +216,44 @@ class PasswordViewPage(tk.Frame):
         f.close()
         
         self.userPass = raw_data[0][0]
-        print(raw_data)
         for i in range(len(raw_data)-1):
             self.accountData[raw_data[i+1][0]] = raw_data[i+1][1]
         return
-    
-    def displayData(self):
+
+    def displayAllData(self):
         # self: The PasswordViewPage class
         # Display the account data stored in the self.accountData dictionary
+        self.loadAccountData()
         for key in self.accountData:
-            WebsiteUser = key.split("|.~")
-            website = WebsiteUser[0]
-            username = WebsiteUser[1]
+            self.displayEntry(key)
 
-            webSpaceLen = (len("Website") + len(self.spacing)) - len(website)
-            webSpace = ""
-            for i in range(webSpaceLen):
-                webSpace += " "
-            print(website + ' ' + str(len(webSpace)) + ' ' + str(len(website)))
+    def displayEntry(self, key):
+        # self: The PasswordViewPage class
 
-            userSpaceLen = (len("Username") + len(self.spacing) - len(username))
-            userSpace = ""
-            for i in range(userSpaceLen):
-                userSpace += " "
+        WebsiteUser = key.split("|.~")
+        website = WebsiteUser[0]
+        username = WebsiteUser[1]
 
-            self.passwordLB.insert('end', website + webSpace + username + userSpace + self.accountData[key])
-        return
+        webSpaceLen = (len("Website") + len(self.spacing)) - len(website)
+        webSpace = ""
+        for i in range(webSpaceLen):
+            webSpace += " "
+
+        userSpaceLen = (len("Username") + len(self.spacing) - len(username))
+        userSpace = ""
+        for i in range(userSpaceLen):
+            userSpace += " "
+
+        self.passwordLB.insert('end', website + webSpace + username + userSpace + self.accountData[key])
+
+    def search(self):
+        searchKey = self.searchE.get()
+        self.passwordLB.delete(0, 'end')
+        self.passwordLB.insert('end', "website" + self.spacing + "Username"+ self.spacing + "Password")
+
+        for key in self.accountData:
+            if searchKey in key:
+                self.displayEntry(key)
 
 class CreatePasswordPage(tk.Frame):
     def __init__(self, parent, controller, filename):
@@ -317,7 +332,6 @@ class CreatePasswordPage(tk.Frame):
         self.clearEntries()
         controller.show_frame(HomePage)
     
-
 def encrypt(string):
     encryptPass = ""
     for letter in string:
@@ -346,5 +360,4 @@ def userToFilename(username):
     return filename
 
 app = AccountManager()
-
 app.mainloop()
