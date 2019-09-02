@@ -182,18 +182,12 @@ class PasswordViewPage(tk.Frame):
 
         self.homeB = ttk.Button(self, text = "Home", command = lambda: controller.show_frame(HomePage))
         self.homeB.grid(row=0, column=0, sticky = 'w')
-        '''
-        tk.Label(self, text = "Website:").grid(row=1, column=0, sticky='e')
-        tk.Label(self, text = "Username:").grid(row=2, column=0, sticky='e')
-        tk.Label(self, text = "Password:").grid(row=3, column=0, sticky='e')
+        
+        self.editB = ttk.Button(self, text = "Edit", command  = self.editSelect)
+        self.editB.grid(row=1, column=0, sticky='e')
+        self.deleteB = ttk.Button(self, text = "Delete", command = self.deleteSelect)
+        self.deleteB.grid(row=1, column=1, sticky='w')
 
-        self.websiteE = tk.Entry(self, width=35)
-        self.usernameE = tk.Entry(self, width=35)
-        self.passwordE = tk.Entry(self, width=35)
-        #self.websiteE.grid(row=2, column=1, sticky = 'w')
-        self.usernameE.grid(row=1, column=1, sticky = 'w')
-        self.passwordE.grid(row=2, column=1, sticky = 'w')
-        '''
         self.searchB = ttk.Button(self, text = "Search", command = self.search)
         self.searchE = tk.Entry(self, width=35)
         self.searchB.grid(row=3, column=1, sticky='w')
@@ -201,14 +195,13 @@ class PasswordViewPage(tk.Frame):
 
         self.passwordLB = tk.Listbox(self, height = 6, width = 90, font = ('Courier', 9))
         self.passwordLB.grid(row=4, column=0, columnspan=2)
-        self.passwordLB.insert('end', "website" + self.spacing + "Username"+ self.spacing + "Password")
+        self.passwordLB.insert('end', "Website" + self.spacing + "Username"+ self.spacing + "Password")
 
         self.displayAllData()
 
     def loadAccountData(self):
         # self: The PasswordViewPage class
-        # Opens users file and reads the account data it contains and stores the data
-        # in the self.accountData dictionary
+        # Opens users file and reads the account data it contains and stores the data in the self.accountData dictionary
         with open(self.filename, "r") as f:
             raw_data = f.readlines()
             raw_data = [line.strip() for line in raw_data]
@@ -246,14 +239,60 @@ class PasswordViewPage(tk.Frame):
 
         self.passwordLB.insert('end', website + webSpace + username + userSpace + self.accountData[key])
 
-    def search(self):
-        searchKey = self.searchE.get()
+    def clearListbox(self):
+        # self: The PasswordViewPage class
+        # Clears all the entries in the password Listbox and inserts the headers back
         self.passwordLB.delete(0, 'end')
-        self.passwordLB.insert('end', "website" + self.spacing + "Username"+ self.spacing + "Password")
+        self.passwordLB.insert('end', "Website" + self.spacing + "Username"+ self.spacing + "Password")
+
+    def search(self):
+        # self: The PasswordViewPage class
+        searchKey = self.searchE.get()
+        self.clearListbox
 
         for key in self.accountData:
             if searchKey in key:
                 self.displayEntry(key)
+
+    def getSelect(self):
+        # self: The PasswordViewPage class
+        # Get the currently selected item from the password Listbox and return that accounts data dict key
+        try:
+            selection = self.passwordLB.get(self.passwordLB.curselection())
+            selection = selection.split()
+            dictKey = selection[0] + '|.~' + selection[1]
+            return dictKey
+        except:
+            return False
+
+    def editSelect(self):
+        # self: The PasswordViewPage class
+        dictKey = self.getSelect()
+
+    def deleteSelect(self):
+        # self: The PasswordViewPage class
+        # Deletes the currently selected account data from the dictionary and calls to write new dictionary to file
+        key = self.getSelect()
+        if key != False and key != "Website|.~Username":
+            del self.accountData[key]
+            self.saveChangedData()
+            self.refreshData()
+
+    def saveChangedData(self):
+        # self: The PasswordViewPage class
+        # Writes the current dictonary to the users file
+        file = open(self.filename, "w")
+        file.write(self.userPass + '\n')
+        for key in self.accountData:
+            file.write(key + '~.|' + self.accountData[key] + '\n')
+        file.close
+
+    def refreshData(self):
+        # self: The PasswordViewPage class
+        # Refresh the listbox to display any changes that could have been made to the dictionary or to the file
+        self.clearListbox()
+        self.displayAllData()
+
 
 class CreatePasswordPage(tk.Frame):
     def __init__(self, parent, controller, filename):
