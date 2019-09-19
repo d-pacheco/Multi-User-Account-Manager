@@ -223,7 +223,7 @@ class PasswordViewPage(tk.Frame):
         
         self.userPass = raw_data[0][0]
         for i in range(len(raw_data)-1):
-            self.accountData[raw_data[i+1][0]] = raw_data[i+1][1]
+            self.accountData[raw_data[i+1][0]] = decrypt(raw_data[i+1][1])
         
         self.sortedKeyList = []
         for key in self.accountData:
@@ -321,7 +321,7 @@ class PasswordViewPage(tk.Frame):
         file = open(self.filename, "w")
         file.write(self.userPass + '\n')
         for key in self.sortedKeyList:
-            file.write(key + '~.|' + self.accountData[key] + '\n')
+            file.write(key + '~.|' + encrypt(self.accountData[key]) + '\n')
         file.close
 
     def refreshData(self):
@@ -463,7 +463,7 @@ class CreatePasswordPage(tk.Frame):
                     username += split
 
             with open(self.filename, "a") as f:
-                f.write(website + '|.~' + username + '~.|' + password + '\n')
+                f.write(website + '|.~' + username + '~.|' + encrypt(password) + '\n')
                 f.close()
             self.clearEntries()
 
