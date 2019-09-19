@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 import random
 
-
 class AccountManager(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
@@ -16,7 +15,7 @@ class AccountManager(tk.Tk):
 
         self.frames = {}    # Dictionary hold frames which represent pages
         
-        for page in (LoginPage, CreateUserPage):
+        for page in (LoginPage, CreateUserPage, EditPasswordPage):
             frame = page(self.frameContainer, self)
             self.frames[page] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -43,6 +42,20 @@ class AccountManager(tk.Tk):
         self.show_frame(LoginPage)
         for page in (HomePage, PasswordViewPage, CreatePasswordPage):
             del self.frames[page]
+
+    def PasswordViewRefresh(self):
+        page = self.frames[PasswordViewPage]
+        page.refreshData()
+
+    def goToEditPage(self, website, username, password):
+        page = self.frames[EditPasswordPage]
+        page.setUserData(website, username, password)
+        self.show_frame(EditPasswordPage)
+
+    def saveEditFromEditPage(self, website, username, password):
+        page = self.frames[PasswordViewPage]
+        page.saveEditChanges(website, username, password)
+
 
 class LoginPage(tk.Frame):
     def __init__(self, parent, controller):
@@ -179,27 +192,27 @@ class PasswordViewPage(tk.Frame):
         self.filename = filename
         self.spacing = "                          "
         self.accountData = {}
+        self.sortedKeyList = []
 
         self.homeB = ttk.Button(self, text = "Home", command = lambda: controller.show_frame(HomePage))
         self.homeB.grid(row=0, column=0, sticky = 'w')
-        
-        self.editB = ttk.Button(self, text = "Edit", command  = self.editSelect)
-        self.editB.grid(row=1, column=0, sticky='e')
-        self.deleteB = ttk.Button(self, text = "Delete", command = self.deleteSelect)
-        self.deleteB.grid(row=1, column=1, sticky='w')
 
         self.searchB = ttk.Button(self, text = "Search", command = self.search)
         self.searchE = tk.Entry(self, width=35)
-        self.searchB.grid(row=3, column=1, sticky='w')
-        self.searchE.grid(row=3, column=0, sticky='e')
-
-        self.passwordLB = tk.Listbox(self, height = 6, width = 90, font = ('Courier', 9))
-        self.passwordLB.grid(row=4, column=0, columnspan=2)
+        self.searchB.grid(row=1, column=3, sticky='w')
+        self.searchE.grid(row=1, column=0, sticky='e', columnspan=3)
+        self.passwordLB = tk.Listbox(self, height = 8, width = 90, font = ('Courier', 9))
+        self.passwordLB.grid(row=2, column=0, columnspan=4)
         self.passwordLB.insert('end', "Website" + self.spacing + "Username"+ self.spacing + "Password")
 
-        self.displayAllData()
+        self.editB = ttk.Button(self, text = "Edit", command  = lambda: self.editSelect(controller))
+        self.editB.grid(row=3, column=1, sticky='e')
+        self.deleteB = ttk.Button(self, text = "Delete", command = self.deleteSelect)
+        self.deleteB.grid(row=3, column=2, sticky='w')
 
-    def loadAccountData(self):
+        self.loadAndDisplayAll()
+
+    def loadAndDisplayAll(self):
         # self: The PasswordViewPage class
         # Opens users file and reads the account data it contains and stores the data in the self.accountData dictionary
         with open(self.filename, "r") as f:
@@ -211,13 +224,17 @@ class PasswordViewPage(tk.Frame):
         self.userPass = raw_data[0][0]
         for i in range(len(raw_data)-1):
             self.accountData[raw_data[i+1][0]] = raw_data[i+1][1]
-        return
+        
+        self.sortedKeyList = []
+        for key in self.accountData:
+            self.sortedKeyList.append(key)
+        quickSort(self.sortedKeyList, 0, len(self.sortedKeyList)-1)
+        self.displayAllData()
 
     def displayAllData(self):
         # self: The PasswordViewPage class
         # Display the account data stored in the self.accountData dictionary
-        self.loadAccountData()
-        for key in self.accountData:
+        for key in self.sortedKeyList:
             self.displayEntry(key)
 
     def displayEntry(self, key):
@@ -250,9 +267,13 @@ class PasswordViewPage(tk.Frame):
         searchKey = self.searchE.get()
         self.clearListbox
 
+        keyList = []
         for key in self.accountData:
-            if searchKey in key:
-                self.displayEntry(key)
+            if searchKey.lower() in key.lower():
+                keyList.append(key)
+        quickSort(keyList, 0, len(keyList)-1)
+        for key in keyList:
+            self.displayEntry(key)
 
     def getSelect(self):
         # self: The PasswordViewPage class
@@ -265,9 +286,23 @@ class PasswordViewPage(tk.Frame):
         except:
             return False
 
-    def editSelect(self):
+    def editSelect(self, controller):
         # self: The PasswordViewPage class
-        dictKey = self.getSelect()
+        # controller: The AccountManager class
+        # Gets the account data slected and passes it to edit password page
+        key = self.getSelect()
+        if key != "Website|.~Username":
+            website, username = key.split("|.~")
+            password = self.accountData[key]
+            controller.goToEditPage(website, username, password)
+
+    def saveEditChanges(self, website, username, password):
+        # self: The PasswordViewPage class
+        # Recieves the changed data from the EditPasswordPage and saves/displays the changes
+        key = website + "|.~" + username
+        self.accountData[key] = password
+        self.saveChangedData()
+        self.refreshData()
 
     def deleteSelect(self):
         # self: The PasswordViewPage class
@@ -275,15 +310,17 @@ class PasswordViewPage(tk.Frame):
         key = self.getSelect()
         if key != False and key != "Website|.~Username":
             del self.accountData[key]
+            self.sortedKeyList.remove(key)
             self.saveChangedData()
-            self.refreshData()
+            self.clearListbox()
+            self.displayAllData()
 
     def saveChangedData(self):
         # self: The PasswordViewPage class
         # Writes the current dictonary to the users file
         file = open(self.filename, "w")
         file.write(self.userPass + '\n')
-        for key in self.accountData:
+        for key in self.sortedKeyList:
             file.write(key + '~.|' + self.accountData[key] + '\n')
         file.close
 
@@ -291,7 +328,69 @@ class PasswordViewPage(tk.Frame):
         # self: The PasswordViewPage class
         # Refresh the listbox to display any changes that could have been made to the dictionary or to the file
         self.clearListbox()
-        self.displayAllData()
+        self.loadAndDisplayAll()
+
+class EditPasswordPage(tk.Frame):
+    def __init__(self, parent, controller):
+        # self: The EditPasswordVPage class
+        # parent: The frameContainer
+        # controller: The AccountManager class
+
+        tk.Frame.__init__(self, parent)
+        self.errorOccured = False
+        self.websiteL = tk.Label(self, text = "Website: ")
+        self.passwordL = tk.Label(self, text = "Password: ")
+        self.usernameL = tk.Label(self, text = "Username: ")
+        self.passwordE = tk.Entry(self, width=35)
+
+        self.websiteL.grid(row=0, column=0)
+        self.usernameL.grid(row=1, column=0)
+        self.passwordL.grid(row=2, column=0)
+        self.passwordE.grid(row=2, column=1)
+
+        self.cancelB = ttk.Button(self, text = "Cancel", command = lambda: self.leavePage(controller))
+        self.saveB   = ttk.Button(self, text = "Save", command = lambda: self.saveChangedEntries(controller))
+        self.cancelB.grid(row=3, column=0)
+        self.saveB.grid(row=3, column=1, sticky="w")
+
+    def setUserData(self, website, username, password):
+        # self: The EditPasswordVPage class
+        self.website = website
+        self.username = username
+        self.password = password
+
+        self.userWebsiteL = tk.Label(self, text = self.website)
+        self.userWebsiteL.grid(row=0, column=1, sticky="w")
+        self.accountUsernameL = tk.Label(self, text = self.username)
+        self.accountUsernameL.grid(row=1, column=1, sticky="w")
+        self.passwordE.insert(0, self.password)
+
+    def saveChangedEntries(self, controller):
+        # self: The EditPasswordVPage class
+        # controller: The AccountManager class
+        password = self.passwordE.get()
+        if len(password) < 1:
+            self.errorL = tk.Label(self, text = "Password field can not be blank")
+            self.errorL.grid(row=4, column=0, columnspan=2)
+            self.errorOccured = True
+        else:
+            # No changes were actually made
+            if password == self.password:
+                self.leavePage(controller)
+            else:
+                controller.saveEditFromEditPage(self.website, self.username, password)
+                self.leavePage(controller)
+
+    def leavePage(self, controller):
+        # self: The EditPasswordVPage class
+        # controller: The AccountManager class
+        if self.errorOccured:
+            self.errorL.destroy()
+            self.errorOccured = False
+        self.userWebsiteL.destroy()
+        self.accountUsernameL.destroy()
+        self.passwordE.delete(0, 'end')
+        controller.show_frame(PasswordViewPage)
 
 
 class CreatePasswordPage(tk.Frame):
@@ -352,6 +451,17 @@ class CreatePasswordPage(tk.Frame):
             self.errorL = tk.Label(self, text = "Text fields cannot be blank")
             self.errorL.grid(row=self.rowEntryStart+5, columnspan=2)
         else:
+            if len(website.split()) > 1:
+                websiteSplit = website.split()
+                website = ""
+                for split in websiteSplit:
+                    website += split
+            if len(username.split()) > 1:
+                usernameSplit = username.split()
+                username = ""
+                for split in usernameSplit:
+                    username += split
+
             with open(self.filename, "a") as f:
                 f.write(website + '|.~' + username + '~.|' + password + '\n')
                 f.close()
@@ -369,6 +479,7 @@ class CreatePasswordPage(tk.Frame):
         # controller: The AccountManager class
         # Clears Entries before returning to home page
         self.clearEntries()
+        controller.PasswordViewRefresh()
         controller.show_frame(HomePage)
     
 def encrypt(string):
@@ -397,6 +508,27 @@ def userToFilename(username):
         filename += str(ord(i))
     filename += ".txt"
     return filename
+
+def quickSort(array, low, high):
+    if low < high:
+        pivot = partition(array, low, high)
+        quickSort(array, low, pivot-1)
+        quickSort(array, pivot+1, high)
+
+def partition(array, low, high):
+    i = low-1
+    pivot = array[high].lower()
+
+    for j in range(low, high):
+        if array[j].lower() <= pivot:
+            i += 1
+            temp = array[j]
+            array[j] = array[i]
+            array[i] = temp
+    temp = array[high]
+    array[high] = array[i+1]
+    array[i+1] = temp
+    return(i+1)
 
 app = AccountManager()
 app.mainloop()
