@@ -19,6 +19,10 @@ I wanted to create my own password manager that could be used by multiple users 
 
 ## Screenshots
 
-<p align="center">
-  <img alt="LoginPage" src="https://imgur.com/0i8jNgH" />
-</p>
+![](imgs/LoginPage.PNG)
+![](imgs/SignupPage.PNG)
+![](imgs/imgs/Home%20Page.PNG)
+![](imgs/Home%20Page.PNG)
+![](imgs/PasswordView.PNG)
+![](imgs/Edit%20Page.PNG)
+![](imgs/Create%20Password.PNG)
