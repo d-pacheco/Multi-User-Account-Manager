@@ -90,7 +90,7 @@ class LoginPage(tk.Frame):
             f = open(filename, "r")
             savedPass = f.readline()
             savedPass = savedPass.strip()
-            if self.password == savedPass:
+            if encrypt(self.password) == savedPass:
                 self.userE.delete(0, 'end')
                 self.passwordE.delete(0, 'end')
                 controller.loginSuccess(filename)
@@ -147,7 +147,7 @@ class CreateUserPage(tk.Frame):
                 f.close()
             except:
                 f = open(filename, "w")
-                f.write(password + '\n')
+                f.write(encrypt(password) + '\n')
                 f.close()
                 self.clearEntries() # Clear entry field once leaving create user page
                 controller.show_frame(LoginPage)
@@ -169,7 +169,6 @@ class HomePage(tk.Frame):
         # parent: The frameContainer
         # controller: The AccountManager class
         # filename: Name of file for current logged in User
-
         tk.Frame.__init__(self, parent)
         self.filename = filename
         
@@ -178,7 +177,7 @@ class HomePage(tk.Frame):
         self.viewPassesB.grid(row = 0, column = 0)
         self.createPassB.grid(row = 0, column = 1)
         self.logoutB = ttk.Button(self, text = "Logout", command = controller.userLogout)
-        self.logoutB.grid(row = 0, column = 2)
+        self.logoutB.grid(row = 0, column = 2, sticky='e')
 
 
 class PasswordViewPage(tk.Frame):
