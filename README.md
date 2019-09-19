@@ -16,3 +16,13 @@ I wanted to create my own password manager that could be used by multiple users 
 - Better class design and learning how to integrate classes to work with one another
 - Building functions and methods for reusability rather than for an intended single purpose
 - Diligent software planning, decorator design pattern and builder pattern to be better implemented in future projects
+
+## Screenshots
+
+![](imgs/LoginPage.PNG)
+![](imgs/SignupPage.PNG)
+![](imgs/imgs/Home%20Page.PNG)
+![](imgs/Home%20Page.PNG)
+![](imgs/PasswordView.PNG)
+![](imgs/Edit%20Page.PNG)
+![](imgs/Create%20Password.PNG)
