@@ -26,3 +26,7 @@ I wanted to create my own password manager that could be used by multiple users 
 ![](imgs/PasswordView.PNG)
 ![](imgs/Edit%20Page.PNG)
 ![](imgs/Create%20Password.PNG)
+
+## License
+
+The application is granted for commercial use, modifcations, distribution, and private use under the MIT License.
